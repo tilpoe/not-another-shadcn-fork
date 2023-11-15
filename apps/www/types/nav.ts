@@ -1,7 +1,7 @@
 import { Icons } from "@/components/icons"
 
 export interface NavItem {
-  title: string
+  title: React.ReactNode
   href?: string
   disabled?: boolean
   external?: boolean

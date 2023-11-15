@@ -341,6 +341,13 @@ export const Index: Record<string, any> = {
       component: React.lazy(() => import("@/registry/default/example/badge-secondary")),
       files: ["registry/default/example/badge-secondary.tsx"],
     },
+    "button-default-variant": {
+      name: "button-default-variant",
+      type: "components:example",
+      registryDependencies: ["button"],
+      component: React.lazy(() => import("@/registry/default/example/button-default-variant")),
+      files: ["registry/default/example/button-default-variant.tsx"],
+    },
     "button-demo": {
       name: "button-demo",
       type: "components:example",
@@ -1419,6 +1426,13 @@ export const Index: Record<string, any> = {
       registryDependencies: ["badge"],
       component: React.lazy(() => import("@/registry/new-york/example/badge-secondary")),
       files: ["registry/new-york/example/badge-secondary.tsx"],
+    },
+    "button-default-variant": {
+      name: "button-default-variant",
+      type: "components:example",
+      registryDependencies: ["button"],
+      component: React.lazy(() => import("@/registry/new-york/example/button-default-variant")),
+      files: ["registry/new-york/example/button-default-variant.tsx"],
     },
     "button-demo": {
       name: "button-demo",

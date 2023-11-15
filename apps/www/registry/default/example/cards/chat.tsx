@@ -7,7 +7,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/registry/default/ui/avatar"
-import { Button } from "@/registry/default/ui/button"
+import { Button, ButtonIcon } from "@/registry/default/ui/button"
 import {
   Card,
   CardContent,
@@ -111,12 +111,12 @@ export function CardsChat() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  size="icon"
+                  icon
                   variant="outline"
                   className="ml-auto rounded-full"
                   onClick={() => setOpen(true)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <ButtonIcon icon={<Plus className="h-4 w-4" />} />
                   <span className="sr-only">New message</span>
                 </Button>
               </TooltipTrigger>
@@ -165,8 +165,8 @@ export function CardsChat() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
             />
-            <Button type="submit" size="icon" disabled={inputLength === 0}>
-              <Send className="h-4 w-4" />
+            <Button type="submit" icon disabled={inputLength === 0}>
+              <ButtonIcon icon={<Send className="h-4 w-4" />} />
               <span className="sr-only">Send</span>
             </Button>
           </form>

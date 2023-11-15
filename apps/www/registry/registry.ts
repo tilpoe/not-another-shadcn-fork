@@ -297,6 +297,12 @@ const example: Registry = [
     files: ["example/badge-secondary.tsx"],
   },
   {
+    name: "button-default-variant",
+    type: "components:example",
+    registryDependencies: ["button"],
+    files: ["example/button-default-variant.tsx"],
+  },
+  {
     name: "button-demo",
     type: "components:example",
     registryDependencies: ["button"],

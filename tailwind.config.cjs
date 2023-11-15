@@ -13,6 +13,11 @@ module.exports = {
       },
     },
     extend: {
+      screens: {
+        "-sm": { max: "639px" },
+        "-md": { max: "767px" },
+        "-lg": { max: "1023px" },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -73,7 +73,7 @@ export function CommandMenu({ ...props }: DialogProps) {
               .map((navItem) => (
                 <CommandItem
                   key={navItem.href}
-                  value={navItem.title}
+                  value={navItem.title?.toString()}
                   onSelect={() => {
                     runCommand(() => router.push(navItem.href as string))
                   }}
@@ -84,11 +84,11 @@ export function CommandMenu({ ...props }: DialogProps) {
               ))}
           </CommandGroup>
           {docsConfig.sidebarNav.map((group) => (
-            <CommandGroup key={group.title} heading={group.title}>
+            <CommandGroup key={group.title?.toString()} heading={group.title}>
               {group.items.map((navItem) => (
                 <CommandItem
                   key={navItem.href}
-                  value={navItem.title}
+                  value={navItem.title?.toString()}
                   onSelect={() => {
                     runCommand(() => router.push(navItem.href as string))
                   }}

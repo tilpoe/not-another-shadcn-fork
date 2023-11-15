@@ -6,7 +6,7 @@ import { useTheme } from "next-themes"
 import { Bar, BarChart, ResponsiveContainer } from "recharts"
 
 import { useConfig } from "@/hooks/use-config"
-import { Button } from "@/registry/default/ui/button"
+import { Button, ButtonIcon } from "@/registry/default/ui/button"
 import {
   Card,
   CardContent,
@@ -80,12 +80,12 @@ export function CardsActivityGoal() {
         <div className="flex items-center justify-center space-x-2">
           <Button
             variant="outline"
-            size="icon"
+            icon
             className="h-8 w-8 shrink-0 rounded-full"
             onClick={() => onClick(-10)}
             disabled={goal <= 200}
           >
-            <Minus className="h-4 w-4" />
+            <ButtonIcon icon={<Minus className="h-4 w-4" />} />
             <span className="sr-only">Decrease</span>
           </Button>
           <div className="flex-1 text-center">
@@ -96,12 +96,12 @@ export function CardsActivityGoal() {
           </div>
           <Button
             variant="outline"
-            size="icon"
+            icon
             className="h-8 w-8 shrink-0 rounded-full"
             onClick={() => onClick(10)}
             disabled={goal >= 400}
           >
-            <Plus className="h-4 w-4" />
+            <ButtonIcon icon={<Plus className="h-4 w-4" />} />
             <span className="sr-only">Increase</span>
           </Button>
         </div>

@@ -1,12 +1,14 @@
-import * as React from "react"
+import { Info } from "lucide-react"
 
-import { Button } from "@/registry/default/ui/button"
+import { Button, ButtonIcon } from "@/registry/default/ui/button"
 import {
   Card,
+  CardActions,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
+  CardHeading,
   CardTitle,
 } from "@/registry/default/ui/card"
 import { Input } from "@/registry/default/ui/input"
@@ -23,8 +25,17 @@ export default function CardWithForm() {
   return (
     <Card className="w-[350px]">
       <CardHeader>
-        <CardTitle>Create project</CardTitle>
-        <CardDescription>Deploy your new project in one-click.</CardDescription>
+        <CardHeading>
+          <CardTitle>Create project</CardTitle>
+          <CardDescription>
+            Deploy your new project in one-click.
+          </CardDescription>
+        </CardHeading>
+        <CardActions>
+          <Button variant="ghost" icon>
+            <ButtonIcon icon={<Info />} />
+          </Button>
+        </CardActions>
       </CardHeader>
       <CardContent>
         <form>

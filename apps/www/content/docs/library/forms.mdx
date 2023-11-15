@@ -1,0 +1,372 @@
+---
+title: Forms
+description: Custom hooks and components for forms using react-hook-form.
+---
+
+<Steps>
+
+### Install dependencies
+
+```bash
+pnpm add react-hook-form @hookform/resolvers/zod zod @radix-ui/react-slot
+```
+
+### Create utils
+
+```tsx title="lib/forms/utils.ts"
+/* -------------------------------------------------------------------------- */
+/*                                Transformers                                */
+/* -------------------------------------------------------------------------- */
+import { useId, type BaseSyntheticEvent, type ChangeEvent } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  useForm as useReactHookForm,
+  type DefaultValues,
+  type FieldErrors,
+  type FieldPath,
+  type FieldPathValue,
+  type FieldValues,
+  type Noop,
+  type RefCallBack,
+  type SubmitErrorHandler,
+  type SubmitHandler,
+  type UseFormReturn as UseDefaultFormReturn,
+} from "react-hook-form"
+import { type z } from "zod"
+
+export interface FieldProps<TValue = unknown> {
+  onChange: (event: TValue | ChangeEvent) => void
+  onBlur: Noop
+  value: TValue
+  name: string
+  ref: RefCallBack
+}
+
+export const transformToCheckboxField = (field: FieldProps<boolean>) => {
+  const { onChange, value, ...props } = field
+
+  return {
+    ...props,
+    checked: value,
+    onCheckedChange: (checked: boolean) => {
+      onChange(checked)
+    },
+  }
+}
+
+export const transformToSliderField = (field: FieldProps<number[]>) => {
+  const { onChange, ...props } = field
+
+  return {
+    ...props,
+    onValueChange: (value: number[]) => {
+      onChange(value)
+    },
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Hooks                                   */
+/* -------------------------------------------------------------------------- */
+
+export type FormOptions<TSchema extends z.ZodType> = {
+  id?: string
+  onSubmit?: (data: z.infer<TSchema>) => void | Promise<void>
+  onError?: (errors: FieldErrors<z.infer<TSchema>>) => Promise<void> | void
+  defaultValues?: DefaultValues<z.infer<TSchema>>
+  reValidateMode?: "onSubmit" | "onBlur" | "onChange"
+  isSubmitting?: boolean
+}
+
+export type UseFormReturn<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TFieldValues extends FieldValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TContext = any,
+  TTransformedValues extends FieldValues | undefined = undefined
+> = Omit<
+  UseDefaultFormReturn<TFieldValues, TContext, TTransformedValues>,
+  "handleSubmit"
+> & {
+  id: string
+  formProps: {
+    id: string
+    onSubmit: (e?: BaseSyntheticEvent | undefined) => Promise<void>
+  }
+  handleSubmit: (e?: BaseSyntheticEvent | undefined) => void
+  safeWatch: <TFieldName extends FieldPath<TFieldValues>>(
+    name: TFieldName,
+    defaultValue?: FieldPathValue<TFieldValues, TFieldName>
+  ) => FieldPathValue<TFieldValues, TFieldName> | undefined
+  schema: TFieldValues
+  isSubmitting?: boolean
+}
+
+export const useForm = <TSchema extends z.ZodType>(
+  schema: TSchema,
+  options?: FormOptions<TSchema>
+): UseFormReturn<z.infer<TSchema>> => {
+  type FormSchema = z.infer<TSchema>
+
+  const id = useId()
+
+  const form = useReactHookForm<FormSchema>({
+    defaultValues: options?.defaultValues,
+    reValidateMode: options?.reValidateMode ?? "onChange",
+    resolver: zodResolver(schema),
+  })
+
+  // async handler for onValid callback
+  const onValid: SubmitHandler<FormSchema> = async (data, e) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    if (options?.onSubmit) await options.onSubmit(data)
+  }
+
+  // async handler for onError callback
+  const onError: SubmitErrorHandler<FormSchema> = async (errors, e) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    if (options?.onError) await options.onError(errors)
+  }
+
+  // return the function form.watch with the same types but with an added undefined return
+  const safeWatch = <TFieldName extends FieldPath<FormSchema>>(
+    name: TFieldName,
+    defaultValue?: FieldPathValue<FormSchema, TFieldName>
+  ): FieldPathValue<FormSchema, TFieldName> | undefined => {
+    const value = form.watch(name, defaultValue)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return typeof value === "undefined" ? undefined : value
+  }
+
+  function handleSubmit(_e?: BaseSyntheticEvent | undefined) {
+    void form.handleSubmit(onValid, onError)()
+  }
+
+  return {
+    ...form,
+    id: options?.id ?? id,
+    formProps: {
+      id: options?.id ?? id,
+      onSubmit: form.handleSubmit(onValid, onError),
+    },
+    //form,
+    handleSubmit,
+    safeWatch,
+    schema: schema,
+    isSubmitting: options?.isSubmitting,
+  }
+}
+```
+
+### Create context providers
+
+```tsx title="lib/forms/context.tsx"
+import React from "react"
+import type { FieldPath, FieldValues } from "react-hook-form"
+
+import { type UseFormReturn } from "@/lib/forms/use-form"
+
+/* -------------------------------------------------------------------------- */
+/*                                    Form                                    */
+/* -------------------------------------------------------------------------- */
+
+export type FormContextValue<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TFieldValues extends FieldValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TContext = any,
+  TTransformedValues extends FieldValues | undefined = undefined
+> = UseFormReturn<TFieldValues, TContext, TTransformedValues>
+
+export const FormContext = React.createContext<FormContextValue | null>(null)
+
+export const useFormContext = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TFieldValues extends FieldValues,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TContext = any,
+  TTransformedValues extends FieldValues | undefined = undefined
+>() => {
+  const context = React.useContext(FormContext)
+
+  if (!context) {
+    throw new Error("useForm should be used within <Form>")
+  }
+
+  return context as unknown as FormContextValue<
+    TFieldValues,
+    TContext,
+    TTransformedValues
+  >
+}
+
+export const FormProvider = FormContext.Provider
+
+/* -------------------------------------------------------------------------- */
+/*                                  FormField                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface FormFieldContextValue<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+> {
+  name: TName
+}
+
+export const FormFieldContext =
+  React.createContext<FormFieldContextValue | null>(null)
+
+export const useFormFieldContext = () => {
+  const fieldContext = React.useContext(FormFieldContext)
+  const itemContext = React.useContext(FormItemContext)
+
+  if (!fieldContext) {
+    throw new Error("useFormField should be used within <FormField>")
+  }
+
+  if (!itemContext) {
+    throw new Error("useFormField should be used within <FormItem>")
+  }
+
+  const { getFieldState, formState } = useFormContext()
+
+  const fieldState = getFieldState(fieldContext.name, formState)
+
+  const { id } = itemContext
+
+  return {
+    id,
+    name: fieldContext.name,
+    formItemId: `${id}-form-item`,
+    formDescriptionId: `${id}-form-item-description`,
+    formMessageId: `${id}-form-item-message`,
+    ...fieldState,
+  }
+}
+
+export const FormFieldProvider = FormFieldContext.Provider
+
+/* -------------------------------------------------------------------------- */
+/*                                  FormItem                                  */
+/* -------------------------------------------------------------------------- */
+
+interface FormItemContextValue {
+  id: string
+}
+
+export const FormItemContext = React.createContext<FormItemContextValue | null>(
+  null
+)
+
+export const useFormItemContext = () => {
+  const context = React.useContext(FormItemContext)
+
+  if (!context) {
+    throw new Error("useFormItem should be used within <FormItem>")
+  }
+
+  return context
+}
+
+export const FormItemProvider = FormItemContext.Provider
+```
+
+### Create components
+
+```tsx title="lib/forms/index.tsx"
+"use client"
+
+import React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import {
+  Controller,
+  type ControllerProps,
+  type FieldPath,
+  type FieldValues,
+} from "react-hook-form"
+
+import {
+  FormFieldProvider,
+  FormProvider,
+  useFormFieldContext,
+} from "@/lib/form/context"
+import { type UseFormReturn } from "@/lib/form/utils"
+
+/* -------------------------------------------------------------------------- */
+/*                                    Form                                    */
+/* -------------------------------------------------------------------------- */
+
+export type FormProps = {
+  form: UseFormReturn
+  className?: string
+  children?: React.ReactNode
+  as?: "form" | "div"
+}
+
+export const Form = ({ form, className, children, as }: FormProps) => {
+  const FormWrapper = typeof as === "undefined" ? "form" : as
+  const { id, onSubmit } = form.formProps
+
+  return (
+    <FormProvider value={form}>
+      <FormWrapper
+        id={id}
+        onSubmit={FormWrapper === "form" ? onSubmit : undefined}
+        className={className}
+      >
+        {children}
+      </FormWrapper>
+    </FormProvider>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                  FormField                                 */
+/* -------------------------------------------------------------------------- */
+
+export const FormField = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+>({
+  ...props
+}: ControllerProps<TFieldValues, TName>) => {
+  return (
+    <FormFieldProvider value={{ name: props.name }}>
+      <Controller {...props} />
+    </FormFieldProvider>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 FormControl                                */
+/* -------------------------------------------------------------------------- */
+
+export const FormControl = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ ...props }, ref) => {
+  const { error, formItemId, formDescriptionId, formMessageId } =
+    useFormFieldContext()
+
+  const Comp = React.isValidElement(props.children) ? Slot : "div"
+
+  return (
+    <Comp
+      ref={ref}
+      id={formItemId}
+      aria-describedby={
+        !error
+          ? `${formDescriptionId}`
+          : `${formDescriptionId} ${formMessageId}`
+      }
+      data-error={!!error && true}
+      aria-invalid={!!error}
+      {...props}
+    />
+  )
+})
+```
+
+</Steps>

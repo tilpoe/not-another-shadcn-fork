@@ -1,6 +1,7 @@
 import { Button } from "@/registry/default/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -47,6 +48,9 @@ export default function DialogDemo() {
           </div>
         </div>
         <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
           <Button type="submit">Save changes</Button>
         </DialogFooter>
       </DialogContent>
